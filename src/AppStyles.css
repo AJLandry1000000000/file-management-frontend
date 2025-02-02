@@ -1,0 +1,49 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.header {
+  color: rgba(182, 118, 214, 1);
+  padding: 5px;
+}
+
+.flex-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.table-header {
+  border-bottom: 1px solid black;
+  background: rgba(182, 118, 214, 0.6);
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.table-cell {
+  padding: 10px;
+  border: 1px solid black;
+}
+
+.pagination {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+.pagination-button {
+  margin: 0 5px;
+}
+
+.table {
+  border: 1px solid black;
+  width: '100%';
+}
+
+.menu-options {
+  display: flex;
+  justify-content: space-between;
+}

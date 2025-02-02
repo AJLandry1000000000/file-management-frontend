@@ -1,46 +1,109 @@
-import React, { useMemo } from 'react';
-import { useTable, usePagination, useSortBy } from 'react-table';
+import React, { useState } from 'react';
+import { useTable, Column } from 'react-table';
+
+interface Person {
+  id: number;
+  first_name: string;
+  last_name: string | null;
+  species: string;
+  gender: string;
+  weapon: string | null;
+  vehicle: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Data {
+  people?: Person[];
+}
 
 interface DataTableProps {
-  data: {
-    people?: any[];
-    pagy?: {
-      vars: {
-        items: number;
-        count: number;
-        page: number;
-      };
-      count: number;
-      page: number;
-      prev: number | null;
-      next: number | null;
-    } | {};
-  } | null;
+  data: Data;
   loading: boolean;
 }
 
-const DataTable: React.FC<DataTableProps> = ({ data, loading }) => {
-  const columns = useMemo(
+const DataTable2: React.FC<DataTableProps> = ({ data, loading }) => {
+  const [sortBy, setSortBy] = useState<{ column: string; direction: 'asc' | 'desc' }>({
+    column: 'first_name',
+    direction: 'asc',
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const columns: Column<Person>[] = React.useMemo(
     () => [
-      { Header: 'First Name', accessor: 'first_name' },
-      { Header: 'Last Name', accessor: 'last_name' },
-      { Header: 'Species', accessor: 'species' },
-      { Header: 'Gender', accessor: 'gender' },
-      { Header: 'Weapon', accessor: 'weapon' },
-      { Header: 'Vehicle', accessor: 'vehicle' },
+      {
+        Header: 'First Name',
+        accessor: 'first_name',
+      },
+      {
+        Header: 'Last Name',
+        accessor: 'last_name',
+      },
+      {
+        Header: 'Species',
+        accessor: 'species',
+      },
+      {
+        Header: 'Gender',
+        accessor: 'gender',
+      },
+      {
+        Header: 'Weapon',
+        accessor: 'weapon',
+      },
+      {
+        Header: 'Vehicle',
+        accessor: 'vehicle',
+      },
     ],
     []
   );
 
-  const tableData = useMemo(() => (data && data.people ? data.people : []), [data]);
+  const sortedData = React.useMemo(() => {
+    if (!data.people) return [];
 
+    return [...data.people].sort((a, b) => {
+      const aValue = a[sortBy.column as keyof Person];
+      const bValue = b[sortBy.column as keyof Person];
+      if (aValue === bValue || (!aValue && !bValue)) return 0;
+      if (sortBy.direction === 'asc') {
+        if (aValue === null) return 1;
+        if (bValue === null) return -1;
+        return aValue < bValue ? -1 : 1;
+      } else {
+        if (aValue === null) return -1;
+        if (bValue === null) return 1;
+        return aValue > bValue ? -1 : 1;
+      }
+    });
+  }, [data.people, sortBy]);
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+
+  const paginatedSortedData = React.useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return sortedData.slice(startIndex, startIndex + itemsPerPage);
+  }, [sortedData, currentPage]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
+  
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
-    page,
+    rows,
     prepareRow,
-  } = useTable({ columns, data: tableData }, useSortBy, usePagination);
+  } = useTable({ columns, data: paginatedSortedData });
+
+  const handleSort = (column: string) => {
+    setSortBy(prev => ({
+      column,
+      direction: prev.column === column && prev.direction === 'asc' ? 'desc' : 'asc',
+    }));
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -52,34 +115,72 @@ const DataTable: React.FC<DataTableProps> = ({ data, loading }) => {
 
   return (
     <div>
-      <table {...getTableProps()}>
+      <table {...getTableProps()} className='table'>
         <thead>
-          {headerGroups.map((headerGroup) => (
-            <tr {...headerGroup.getHeaderGroupProps()}>
-              {headerGroup.headers.map((column) => (
-                <th {...column.getHeaderProps(column.getSortByToggleProps())}>
+          {headerGroups.map(headerGroup => (
+            <tr {...headerGroup.getHeaderGroupProps()} key={headerGroup.getHeaderGroupProps().key}>
+              {headerGroup.headers.map(column => (
+                <th
+                  {...column.getHeaderProps()}
+                  key={column.getHeaderProps().key}
+                  onClick={() => handleSort(column.id)}
+                  className='table-header'
+                >
                   {column.render('Header')}
-                  <span>{column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}</span>
+                  <span>
+                    {sortBy.column === column.id
+                      ? sortBy.direction === 'asc'
+                        ? ' ⬆️'
+                        : ' ⬇️'
+                      : ''}
+                  </span>
                 </th>
               ))}
             </tr>
           ))}
         </thead>
         <tbody {...getTableBodyProps()}>
-          {page.map((row) => {
+          {rows.map(row => {
             prepareRow(row);
             return (
-              <tr {...row.getRowProps()}>
-                {row.cells.map((cell) => (
-                  <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
-                ))}
+              <tr {...row.getRowProps()} key={row.id}>
+                {row.cells.map(cell => {
+                  return (
+                    <td
+                      {...cell.getCellProps()}
+                      key={cell.getCellProps().key}
+                      className='table-cell'
+                    >
+                      {cell.render('Cell')}
+                    </td>
+                  );
+                })}
               </tr>
             );
           })}
         </tbody>
       </table>
+      <div>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className='pagination-button'
+        >
+          Previous
+        </button>
+        <span>
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className='pagination-button'
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };
 
-export default DataTable;
+export default DataTable2;

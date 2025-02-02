@@ -1,12 +1,20 @@
+// src/components/PeopleTable.tsx
 import React, { useMemo } from 'react';
 import { useTable, usePagination, useSortBy, useFilters } from 'react-table';
+import axios from 'axios';
 
-interface PeopleTableProps {
-  data: any[];
-  loading: boolean;
-}
+const PeopleTable = () => {
+  const [data, setData] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
 
-const PeopleTable: React.FC<PeopleTableProps> = ({ data, loading }) => {
+  React.useEffect(() => {
+    const fetchData = async () => {
+      const response = await axios.get('http://localhost:3000/people');
+      setData(response.data.people);
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   const columns = useMemo(
     () => [
@@ -24,13 +32,9 @@ const PeopleTable: React.FC<PeopleTableProps> = ({ data, loading }) => {
     getTableProps,
     getTableBodyProps,
     headerGroups,
-    page,
+    rows,
     prepareRow,
-  } = useTable({ columns, data }, useFilters, useSortBy, usePagination);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  } = useTable({ columns, data }, useFilters, useSortBy);
 
   return (
     <div>
@@ -48,7 +52,7 @@ const PeopleTable: React.FC<PeopleTableProps> = ({ data, loading }) => {
           ))}
         </thead>
         <tbody {...getTableBodyProps()}>
-          {page.map((row) => {
+          {rows.map((row) => {
             prepareRow(row);
             return (
               <tr {...row.getRowProps()}>
