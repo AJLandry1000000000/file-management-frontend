@@ -38,7 +38,6 @@ const App: React.FC = () => {
 
   const handleSearchChange = (keyword: string) => {
     fetchData(keyword, location, affiliation);
-    console.log(data)
   };
 
   const handleLocationChange = (location: string) => {
