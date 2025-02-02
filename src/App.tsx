@@ -67,9 +67,7 @@ const App: React.FC = () => {
       <FileUpload onUploadSuccess={fetchData} />
       <hr />
       <p>Select a column to sort the grid.</p>
-      {/* <PeopleTable /> */}
       <DataTable data={data} loading={loading} />
-      {/* <DataTable2 data={data} loading={loading} /> */}
       <hr />
     </>
   )

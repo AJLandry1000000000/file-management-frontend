@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTable, Column } from 'react-table';
+import { useColumns, useSortedData, usePaginatedSortedData, handleSort } from '../utils/Utils';
 
 interface Person {
   id: number;
@@ -27,64 +28,18 @@ const DataTable2: React.FC<DataTableProps> = ({ data, loading }) => {
     column: 'first_name',
     direction: 'asc',
   });
+  
   const [currentPage, setCurrentPage] = useState(1);
+  
   const itemsPerPage = 10;
 
-  const columns: Column<Person>[] = React.useMemo(
-    () => [
-      {
-        Header: 'First Name',
-        accessor: 'first_name',
-      },
-      {
-        Header: 'Last Name',
-        accessor: 'last_name',
-      },
-      {
-        Header: 'Species',
-        accessor: 'species',
-      },
-      {
-        Header: 'Gender',
-        accessor: 'gender',
-      },
-      {
-        Header: 'Weapon',
-        accessor: 'weapon',
-      },
-      {
-        Header: 'Vehicle',
-        accessor: 'vehicle',
-      },
-    ],
-    []
-  );
+  const columns: Column<Person>[] = useColumns();
 
-  const sortedData = React.useMemo(() => {
-    if (!data.people) return [];
-
-    return [...data.people].sort((a, b) => {
-      const aValue = a[sortBy.column as keyof Person];
-      const bValue = b[sortBy.column as keyof Person];
-      if (aValue === bValue || (!aValue && !bValue)) return 0;
-      if (sortBy.direction === 'asc') {
-        if (aValue === null) return 1;
-        if (bValue === null) return -1;
-        return aValue < bValue ? -1 : 1;
-      } else {
-        if (aValue === null) return -1;
-        if (bValue === null) return 1;
-        return aValue > bValue ? -1 : 1;
-      }
-    });
-  }, [data.people, sortBy]);
+  const sortedData = useSortedData(data.people || [], sortBy);
 
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
 
-  const paginatedSortedData = React.useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return sortedData.slice(startIndex, startIndex + itemsPerPage);
-  }, [sortedData, currentPage]);
+  const paginatedSortedData = usePaginatedSortedData(sortedData, currentPage, itemsPerPage);
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
@@ -97,13 +52,6 @@ const DataTable2: React.FC<DataTableProps> = ({ data, loading }) => {
     rows,
     prepareRow,
   } = useTable({ columns, data: paginatedSortedData });
-
-  const handleSort = (column: string) => {
-    setSortBy(prev => ({
-      column,
-      direction: prev.column === column && prev.direction === 'asc' ? 'desc' : 'asc',
-    }));
-  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -123,7 +71,7 @@ const DataTable2: React.FC<DataTableProps> = ({ data, loading }) => {
                 <th
                   {...column.getHeaderProps()}
                   key={column.getHeaderProps().key}
-                  onClick={() => handleSort(column.id)}
+                  onClick={() => handleSort(setSortBy, column.id)}
                   className='table-header'
                 >
                   {column.render('Header')}

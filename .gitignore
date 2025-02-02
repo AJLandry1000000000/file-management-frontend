@@ -26,3 +26,6 @@ dist-ssr
 
 # Task description file
 *.pdf
+
+# Local files I am not using and don't want to commit/track
+src/components/unused_components/
