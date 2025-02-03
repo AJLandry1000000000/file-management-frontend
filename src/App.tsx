@@ -52,6 +52,9 @@ const App: React.FC = () => {
     <>
       <h1 className='header'>File Upload Application</h1>
       <hr />
+      <p>Upload a file (.csv files only) then view it's contents in the table below. </p>
+      <FileUpload onUploadSuccess={fetchData} />
+      <hr />
       <p>Search for records by a first name or last name substring. (case insensitive)</p>
       <SearchBar onSearch={handleSearchChange} />
       <hr />
@@ -61,9 +64,7 @@ const App: React.FC = () => {
         onLocationChange={handleLocationChange}
         onAffiliationChange={handleAffiliationChange}
       />
-      <hr />
-      <p>Upload a file (.csv files only) then view it's contents in the table below. </p>
-      <FileUpload onUploadSuccess={fetchData} />
+
       <hr />
       <p>Select a column to sort the grid.</p>
       <DataTable data={data} loading={loading} />
